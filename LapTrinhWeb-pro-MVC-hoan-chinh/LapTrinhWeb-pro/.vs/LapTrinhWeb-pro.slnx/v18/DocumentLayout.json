@@ -1,0 +1,41 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\nguye\\Downloads\\LapTrinhWeb-pro-MVC-hoan-chinh-v6-v7.2\\LapTrinhWeb-pro-MVC-hoan-chinh\\LapTrinhWeb-pro\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2733D94A-B28F-4475-910A-23572E766D75}|LapTrinhWeb-pro\\LapTrinhWeb-pro.csproj|c:\\users\\nguye\\downloads\\laptrinhweb-pro-mvc-hoan-chinh-v6-v7.2\\laptrinhweb-pro-mvc-hoan-chinh\\laptrinhweb-pro\\laptrinhweb-pro\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{2733D94A-B28F-4475-910A-23572E766D75}|LapTrinhWeb-pro\\LapTrinhWeb-pro.csproj|solutionrelative:laptrinhweb-pro\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\nguye\\Downloads\\LapTrinhWeb-pro-MVC-hoan-chinh-v6-v7.2\\LapTrinhWeb-pro-MVC-hoan-chinh\\LapTrinhWeb-pro\\LapTrinhWeb-pro\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "LapTrinhWeb-pro\\Views\\Home\\Index.cshtml",
+              "ToolTip": "C:\\Users\\nguye\\Downloads\\LapTrinhWeb-pro-MVC-hoan-chinh-v6-v7.2\\LapTrinhWeb-pro-MVC-hoan-chinh\\LapTrinhWeb-pro\\LapTrinhWeb-pro\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "LapTrinhWeb-pro\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-11-18T13:15:35.581Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

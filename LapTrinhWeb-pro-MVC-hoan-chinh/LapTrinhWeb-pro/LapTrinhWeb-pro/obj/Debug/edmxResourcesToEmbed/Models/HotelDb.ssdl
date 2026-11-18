@@ -1,0 +1,269 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="HotelDbModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="BOOKING">
+    <Key>
+      <PropertyRef Name="book_id" />
+    </Key>
+    <Property Name="book_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="guest_id" Type="int" Nullable="false" />
+    <Property Name="property_id" Type="int" Nullable="false" />
+    <Property Name="check_in_date" Type="date" Nullable="false" />
+    <Property Name="check_out_date" Type="date" Nullable="false" />
+    <Property Name="total_amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+  </EntityType>
+  <EntityType Name="BOOKING_DETAIL">
+    <Key>
+      <PropertyRef Name="booking_detail_id" />
+    </Key>
+    <Property Name="booking_detail_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="book_id" Type="int" Nullable="false" />
+    <Property Name="room_id" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="GUEST">
+    <Key>
+      <PropertyRef Name="guest_id" />
+    </Key>
+    <Property Name="guest_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="first_name" Type="nvarchar" MaxLength="50" Nullable="false" />
+    <Property Name="last_name" Type="nvarchar" MaxLength="50" Nullable="false" />
+    <Property Name="email" Type="nvarchar" MaxLength="150" Nullable="false" />
+    <Property Name="phone" Type="nvarchar" MaxLength="20" />
+    <Property Name="membership_tier" Type="nvarchar" MaxLength="30" />
+    <Property Name="password_hash" Type="nvarchar" MaxLength="200" />
+  </EntityType>
+  <EntityType Name="GUEST_PREFERENCE">
+    <Key>
+      <PropertyRef Name="preference_id" />
+    </Key>
+    <Property Name="preference_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="guest_id" Type="int" Nullable="false" />
+    <Property Name="preference_category" Type="nvarchar" MaxLength="100" Nullable="false" />
+  </EntityType>
+  <EntityType Name="PAYMENT">
+    <Key>
+      <PropertyRef Name="payment_id" />
+    </Key>
+    <Property Name="payment_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="book_id" Type="int" Nullable="false" />
+    <Property Name="amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="payment_date" Type="datetime2" Precision="7" Nullable="false" />
+    <Property Name="payment_method" Type="nvarchar" MaxLength="30" />
+  </EntityType>
+  <EntityType Name="PROPERTY">
+    <Key>
+      <PropertyRef Name="property_id" />
+    </Key>
+    <Property Name="property_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="property_name" Type="nvarchar" MaxLength="150" Nullable="false" />
+    <Property Name="address" Type="nvarchar" MaxLength="250" />
+    <Property Name="phone" Type="nvarchar" MaxLength="20" />
+    <Property Name="membership_tier" Type="nvarchar" MaxLength="30" />
+  </EntityType>
+  <EntityType Name="ROOM">
+    <Key>
+      <PropertyRef Name="room_id" />
+    </Key>
+    <Property Name="room_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="room_type_id" Type="int" Nullable="false" />
+    <Property Name="room_number" Type="nvarchar" MaxLength="20" Nullable="false" />
+    <Property Name="floor" Type="int" Nullable="false" />
+    <Property Name="status" Type="nvarchar" MaxLength="20" Nullable="false" />
+  </EntityType>
+  <EntityType Name="ROOM_TYPE">
+    <Key>
+      <PropertyRef Name="room_type_id" />
+    </Key>
+    <Property Name="room_type_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="property_id" Type="int" Nullable="false" />
+    <Property Name="name" Type="nvarchar" MaxLength="100" Nullable="false" />
+    <Property Name="room_type" Type="nvarchar" MaxLength="50" />
+    <Property Name="price_per_night" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+  </EntityType>
+  <EntityType Name="SERVICE">
+    <Key>
+      <PropertyRef Name="service_id" />
+    </Key>
+    <Property Name="service_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="service_name" Type="nvarchar" MaxLength="100" Nullable="false" />
+  </EntityType>
+  <EntityType Name="SERVICE_BOOKING">
+    <Key>
+      <PropertyRef Name="service_booking_id" />
+    </Key>
+    <Property Name="service_booking_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="book_id" Type="int" Nullable="false" />
+    <Property Name="service_id" Type="int" Nullable="false" />
+  </EntityType>
+  <Association Name="FK__BOOKING__guest_i__5812160E">
+    <End Role="GUEST" Type="Self.GUEST" Multiplicity="1" />
+    <End Role="BOOKING" Type="Self.BOOKING" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="GUEST">
+        <PropertyRef Name="guest_id" />
+      </Principal>
+      <Dependent Role="BOOKING">
+        <PropertyRef Name="guest_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__BOOKING__propert__59063A47">
+    <End Role="PROPERTY" Type="Self.PROPERTY" Multiplicity="1" />
+    <End Role="BOOKING" Type="Self.BOOKING" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="PROPERTY">
+        <PropertyRef Name="property_id" />
+      </Principal>
+      <Dependent Role="BOOKING">
+        <PropertyRef Name="property_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__BOOKING_D__book___5DCAEF64">
+    <End Role="BOOKING" Type="Self.BOOKING" Multiplicity="1" />
+    <End Role="BOOKING_DETAIL" Type="Self.BOOKING_DETAIL" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="BOOKING">
+        <PropertyRef Name="book_id" />
+      </Principal>
+      <Dependent Role="BOOKING_DETAIL">
+        <PropertyRef Name="book_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__BOOKING_D__room___5EBF139D">
+    <End Role="ROOM" Type="Self.ROOM" Multiplicity="1" />
+    <End Role="BOOKING_DETAIL" Type="Self.BOOKING_DETAIL" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="ROOM">
+        <PropertyRef Name="room_id" />
+      </Principal>
+      <Dependent Role="BOOKING_DETAIL">
+        <PropertyRef Name="room_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__GUEST_PRE__guest__4CA06362">
+    <End Role="GUEST" Type="Self.GUEST" Multiplicity="1" />
+    <End Role="GUEST_PREFERENCE" Type="Self.GUEST_PREFERENCE" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="GUEST">
+        <PropertyRef Name="guest_id" />
+      </Principal>
+      <Dependent Role="GUEST_PREFERENCE">
+        <PropertyRef Name="guest_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__PAYMENT__book_id__6754599E">
+    <End Role="BOOKING" Type="Self.BOOKING" Multiplicity="1" />
+    <End Role="PAYMENT" Type="Self.PAYMENT" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="BOOKING">
+        <PropertyRef Name="book_id" />
+      </Principal>
+      <Dependent Role="PAYMENT">
+        <PropertyRef Name="book_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__ROOM__room_type___5441852A">
+    <End Role="ROOM_TYPE" Type="Self.ROOM_TYPE" Multiplicity="1" />
+    <End Role="ROOM" Type="Self.ROOM" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="ROOM_TYPE">
+        <PropertyRef Name="room_type_id" />
+      </Principal>
+      <Dependent Role="ROOM">
+        <PropertyRef Name="room_type_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__ROOM_TYPE__prope__5165187F">
+    <End Role="PROPERTY" Type="Self.PROPERTY" Multiplicity="1" />
+    <End Role="ROOM_TYPE" Type="Self.ROOM_TYPE" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="PROPERTY">
+        <PropertyRef Name="property_id" />
+      </Principal>
+      <Dependent Role="ROOM_TYPE">
+        <PropertyRef Name="property_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__SERVICE_B__book___6383C8BA">
+    <End Role="BOOKING" Type="Self.BOOKING" Multiplicity="1" />
+    <End Role="SERVICE_BOOKING" Type="Self.SERVICE_BOOKING" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="BOOKING">
+        <PropertyRef Name="book_id" />
+      </Principal>
+      <Dependent Role="SERVICE_BOOKING">
+        <PropertyRef Name="book_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__SERVICE_B__servi__6477ECF3">
+    <End Role="SERVICE" Type="Self.SERVICE" Multiplicity="1" />
+    <End Role="SERVICE_BOOKING" Type="Self.SERVICE_BOOKING" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="SERVICE">
+        <PropertyRef Name="service_id" />
+      </Principal>
+      <Dependent Role="SERVICE_BOOKING">
+        <PropertyRef Name="service_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="HotelDbModelStoreContainer">
+    <EntitySet Name="BOOKING" EntityType="Self.BOOKING" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="BOOKING_DETAIL" EntityType="Self.BOOKING_DETAIL" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="GUEST" EntityType="Self.GUEST" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="GUEST_PREFERENCE" EntityType="Self.GUEST_PREFERENCE" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="PAYMENT" EntityType="Self.PAYMENT" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="PROPERTY" EntityType="Self.PROPERTY" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="ROOM" EntityType="Self.ROOM" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="ROOM_TYPE" EntityType="Self.ROOM_TYPE" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="SERVICE" EntityType="Self.SERVICE" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="SERVICE_BOOKING" EntityType="Self.SERVICE_BOOKING" Schema="dbo" store:Type="Tables" />
+    <AssociationSet Name="FK__BOOKING__guest_i__5812160E" Association="Self.FK__BOOKING__guest_i__5812160E">
+      <End Role="GUEST" EntitySet="GUEST" />
+      <End Role="BOOKING" EntitySet="BOOKING" />
+    </AssociationSet>
+    <AssociationSet Name="FK__BOOKING__propert__59063A47" Association="Self.FK__BOOKING__propert__59063A47">
+      <End Role="PROPERTY" EntitySet="PROPERTY" />
+      <End Role="BOOKING" EntitySet="BOOKING" />
+    </AssociationSet>
+    <AssociationSet Name="FK__BOOKING_D__book___5DCAEF64" Association="Self.FK__BOOKING_D__book___5DCAEF64">
+      <End Role="BOOKING" EntitySet="BOOKING" />
+      <End Role="BOOKING_DETAIL" EntitySet="BOOKING_DETAIL" />
+    </AssociationSet>
+    <AssociationSet Name="FK__BOOKING_D__room___5EBF139D" Association="Self.FK__BOOKING_D__room___5EBF139D">
+      <End Role="ROOM" EntitySet="ROOM" />
+      <End Role="BOOKING_DETAIL" EntitySet="BOOKING_DETAIL" />
+    </AssociationSet>
+    <AssociationSet Name="FK__GUEST_PRE__guest__4CA06362" Association="Self.FK__GUEST_PRE__guest__4CA06362">
+      <End Role="GUEST" EntitySet="GUEST" />
+      <End Role="GUEST_PREFERENCE" EntitySet="GUEST_PREFERENCE" />
+    </AssociationSet>
+    <AssociationSet Name="FK__PAYMENT__book_id__6754599E" Association="Self.FK__PAYMENT__book_id__6754599E">
+      <End Role="BOOKING" EntitySet="BOOKING" />
+      <End Role="PAYMENT" EntitySet="PAYMENT" />
+    </AssociationSet>
+    <AssociationSet Name="FK__ROOM__room_type___5441852A" Association="Self.FK__ROOM__room_type___5441852A">
+      <End Role="ROOM_TYPE" EntitySet="ROOM_TYPE" />
+      <End Role="ROOM" EntitySet="ROOM" />
+    </AssociationSet>
+    <AssociationSet Name="FK__ROOM_TYPE__prope__5165187F" Association="Self.FK__ROOM_TYPE__prope__5165187F">
+      <End Role="PROPERTY" EntitySet="PROPERTY" />
+      <End Role="ROOM_TYPE" EntitySet="ROOM_TYPE" />
+    </AssociationSet>
+    <AssociationSet Name="FK__SERVICE_B__book___6383C8BA" Association="Self.FK__SERVICE_B__book___6383C8BA">
+      <End Role="BOOKING" EntitySet="BOOKING" />
+      <End Role="SERVICE_BOOKING" EntitySet="SERVICE_BOOKING" />
+    </AssociationSet>
+    <AssociationSet Name="FK__SERVICE_B__servi__6477ECF3" Association="Self.FK__SERVICE_B__servi__6477ECF3">
+      <End Role="SERVICE" EntitySet="SERVICE" />
+      <End Role="SERVICE_BOOKING" EntitySet="SERVICE_BOOKING" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

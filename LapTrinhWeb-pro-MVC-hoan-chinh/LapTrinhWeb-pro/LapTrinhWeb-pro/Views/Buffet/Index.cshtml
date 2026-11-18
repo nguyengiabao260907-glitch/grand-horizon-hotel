@@ -1,0 +1,140 @@
+﻿@model List<LapTrinhWeb_pro.Models.BuffetItem>
+@using LapTrinhWeb_pro.Models
+@{
+    Layout = null;
+    ViewBag.Title = "Thực đơn Buffet";
+    // Bản v6-v7: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+    var categories = ViewBag.Categories as string[] ?? new[] { "Món chính", "Món tráng miệng", "Đồ uống" };
+    string selCategory = ViewBag.Category as string ?? "";
+    string selQ = ViewBag.Q as string ?? "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực đơn Buffet — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="@Url.Action("Create", "Booking")">Đặt ngay</a>
+            }
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Nhà hàng tầng trệt</p>
+                <h2>Thực đơn Buffet</h2>
+                <p class="sub">Phục vụ từ 6:00 đến 10:00 hằng ngày tại nhà hàng tầng trệt. Món chính và món tráng miệng đã bao gồm trong giá buffet — đặt kèm dịch vụ <a href="@Url.Action("Index", "Services")">Buffet Sáng 4★</a> (250.000 đ / đêm) khi đặt phòng.</p>
+            </div>
+
+            <form method="get" action="@Url.Action("Index", "Buffet")" class="form-box filter-bar">
+                <div class="row">
+                    <div class="field">
+                        <label>Tìm món</label>
+                        <input type="text" name="q" value="@selQ" placeholder="Ví dụ: phở, chè, cà phê...">
+                    </div>
+                    <div class="field">
+                        <label>Nhóm món</label>
+                        <select name="category">
+                            <option value="">Tất cả</option>
+                            @foreach (var c in categories)
+                            {
+                                <option value="@c" @(selCategory == c ? "selected" : "")>@c</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" type="submit" style="width:100%">Tìm món</button>
+            </form>
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="empty-box" style="max-width:640px;margin:40px auto 0">
+                    <p>Không tìm thấy món nào phù hợp. Thử đổi từ khóa hoặc nhóm món khác nhé.</p>
+                    <a class="btn" href="@Url.Action("Index", "Buffet")">Xem tất cả món</a>
+                </div>
+            }
+            else
+            {
+                foreach (var cat in categories)
+                {
+                    var items = Model.Where(i => i.category == cat).ToList();
+                    if (items.Count == 0) { continue; }
+                    <h2 style="margin-top:48px">@cat</h2>
+                    <div class="grid">
+                        @foreach (var item in items)
+                        {
+                            <div class="card">
+                                <div class="body">
+                                    <h3>@item.name</h3>
+                                    @if (item.price <= 0)
+                                    {
+                                        <p class="price avail">Đã bao gồm</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="price">@item.price.ToString("N0") đ</p>
+                                    }
+                                    <p>@item.description</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

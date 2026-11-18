@@ -1,0 +1,95 @@
+﻿@model List<LapTrinhWeb_pro.Models.BuffetItem>
+@{
+    Layout = null;
+    ViewBag.Title = "Quản lý thực đơn Buffet";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thực đơn Buffet — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Quản trị</p>
+                <h2>Quản lý thực đơn Buffet</h2>
+                <p class="sub">Thêm, sửa, ẩn hoặc xóa món ăn, đồ uống trong thực đơn buffet.</p>
+            </div>
+
+            @if (TempData["AdminMsg"] != null)
+            {
+                <p class="info">@TempData["AdminMsg"]</p>
+            }
+
+            <p style="margin-top:24px">
+                <a class="btn" href="@Url.Action("Add", "Buffet")">+ Thêm món mới</a>
+                <a class="btn dark" href="@Url.Action("Index", "Buffet")">Xem trang thực đơn cho khách</a>
+                <a class="btn dark" href="@Url.Action("Index", "Admin")">← Về trang Quản trị</a>
+            </p>
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="empty-box" style="max-width:640px;margin:40px auto 0">
+                    <p>Chưa có món nào trong thực đơn. Hãy chạy file database.sql để tạo bảng BUFFET_ITEM và seed món mẫu, rồi bấm "Thêm món mới".</p>
+                </div>
+            }
+            else
+            {
+                <table class="table-bookings" style="margin-top:24px">
+                    <tr><th>Món</th><th>Nhóm</th><th>Mô tả</th><th>Giá</th><th>Trạng thái</th><th></th></tr>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><b>@item.name</b></td>
+                            <td>@item.category</td>
+                            <td>@item.description</td>
+                            <td class="money">@(item.price <= 0 ? "Đã bao gồm" : item.price.ToString("N0") + " đ")</td>
+                            <td>@(item.is_available ? "Đang phục vụ" : "Tạm ẩn")</td>
+                            <td>
+                                <a class="btn" href="@Url.Action("Edit", "Buffet", new { id = item.item_id })">Sửa</a>
+                                <form method="post" action="@Url.Action("Delete", "Buffet")" onsubmit="return confirm('Xóa món &quot;@item.name&quot; khỏi thực đơn?');" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.item_id">
+                                    <button type="submit" class="btn dark">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            }
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

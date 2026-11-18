@@ -1,0 +1,577 @@
+﻿
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box
+}
+
+:root {
+    --gold: #b08d57;
+    --dark: #111;
+    --grey: #666
+}
+
+body {
+    font-family: 'Jost',sans-serif;
+    color: #222;
+    line-height: 1.6
+}
+
+h1, h2, h3 {
+    font-family: 'Cormorant Garamond',serif;
+    font-weight: 500
+}
+
+img {
+    width: 100%;
+    display: block;
+    object-fit: cover
+}
+
+a {
+    text-decoration: none;
+    color: inherit
+}
+
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px
+}
+/* Menu */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #111;
+    color: #fff
+}
+
+    nav .wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px
+    }
+
+.logo {
+    font-family: 'Cormorant Garamond',serif;
+    font-size: 24px;
+    letter-spacing: 3px
+}
+
+    .logo span {
+        color: var(--gold)
+    }
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 28px;
+    font-size: 14px;
+    letter-spacing: 1px
+}
+
+    nav ul a:hover {
+        color: var(--gold)
+    }
+
+.btn {
+    display: inline-block;
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 1px
+}
+
+    .btn:hover {
+        background: #9a7a4a
+    }
+
+    .btn.dark {
+        background: #111
+    }
+/* Hero */
+.hero {
+    height: 100vh;
+    min-height: 600px;
+    position: relative;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 64px
+}
+
+    .hero img {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        filter: brightness(.6)
+    }
+
+    .hero .inner {
+        position: relative;
+        z-index: 2
+    }
+
+    .hero h1 {
+        font-size: 64px;
+        line-height: 1.1
+    }
+
+    .hero p {
+        font-size: 18px;
+        margin: 16px 0 28px;
+        letter-spacing: 1px
+    }
+/* Thanh đặt phòng */
+.booking-bar {
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    max-width: 1000px;
+    margin: -60px auto 0;
+    position: relative;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    padding: 20px;
+    gap: 16px
+}
+
+    .booking-bar label {
+        display: block;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: var(--grey)
+    }
+
+    .booking-bar input, .booking-bar select {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 8px 0;
+        font-size: 15px;
+        outline: none
+    }
+/* Mục chung */
+section {
+    padding: 80px 0
+}
+
+.dark-sec {
+    background: #111;
+    color: #fff
+}
+
+.kicker {
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-size: 13px;
+    text-transform: uppercase
+}
+
+h2 {
+    font-size: 42px;
+    margin: 10px 0 16px;
+    line-height: 1.2
+}
+
+.center {
+    text-align: center
+}
+
+    .center p {
+        max-width: 700px;
+        margin: 0 auto;
+        color: var(--grey)
+    }
+
+.dark-sec .center p {
+    color: #bbb
+}
+/* Carousel điểm đến */
+.carousel {
+    position: relative;
+    max-width: 900px;
+    margin: 40px auto 0
+}
+
+.slide {
+    display: none
+}
+
+    .slide.active {
+        display: block
+    }
+
+    .slide img {
+        height: 480px;
+        border-radius: 4px
+    }
+
+.slide-card {
+    background: #fff;
+    color: #222;
+    max-width: 500px;
+    margin: -80px auto 0;
+    position: relative;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2)
+}
+
+    .slide-card h3 {
+        font-size: 30px
+    }
+
+    .slide-card p {
+        color: var(--grey);
+        margin: 10px 0 16px
+    }
+
+.arrow {
+    position: absolute;
+    top: 45%;
+    background: #fff;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2)
+}
+
+#prevSlide {
+    left: -22px
+}
+
+#nextSlide {
+    right: -22px
+}
+/* Thẻ phòng / dịch vụ */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 24px;
+    margin-top: 40px
+}
+
+.grid4 {
+    grid-template-columns: repeat(4,1fr)
+}
+
+.card {
+    border: 1px solid #eee;
+    background: #fff
+}
+
+    .card img {
+        height: 220px
+    }
+
+    .card .body {
+        padding: 20px
+    }
+
+    .card h3 {
+        font-size: 26px
+    }
+
+.price {
+    color: var(--gold);
+    font-size: 20px;
+    margin: 8px 0
+}
+
+.card p {
+    color: var(--grey);
+    font-size: 15px
+}
+
+.card .btn {
+    margin-top: 16px;
+    width: 100%
+}
+
+.svc {
+    text-align: center;
+    padding: 28px 16px
+}
+
+    .svc .icon {
+        font-size: 36px
+    }
+/* Form */
+.form-box {
+    max-width: 800px;
+    margin: 40px auto 0;
+    background: #f9f7f3;
+    padding: 32px
+}
+
+    .form-box .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px
+    }
+
+.field {
+    margin-bottom: 16px
+}
+
+    .field label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 6px
+    }
+
+    .field input, .field select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        font-size: 15px
+    }
+
+.check {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 6px 0
+}
+
+.total {
+    font-size: 22px;
+    margin: 16px 0
+}
+
+    .total b {
+        color: var(--gold)
+    }
+
+.error {
+    color: red;
+    font-size: 14px;
+    min-height: 20px
+}
+
+#confirmation {
+    display: none;
+    text-align: center
+}
+
+    #confirmation h2 {
+        color: var(--gold)
+    }
+/* Footer */
+footer {
+    background: #111;
+    color: #bbb;
+    padding: 50px 0 20px
+}
+
+    footer .grid {
+        grid-template-columns: repeat(4,1fr);
+        margin-top: 0
+    }
+
+    footer h3 {
+        color: #fff;
+        font-size: 20px;
+        margin-bottom: 12px
+    }
+
+    footer p, footer a {
+        font-size: 14px;
+        display: block;
+        margin: 6px 0
+    }
+
+        footer a:hover {
+            color: var(--gold)
+        }
+
+@media(max-width:800px) {
+    .hero h1 {
+        font-size: 40px
+    }
+
+    h2 {
+        font-size: 32px
+    }
+
+    .booking-bar, .grid, .grid4, .form-box .row {
+        grid-template-columns: 1fr
+    }
+
+    nav ul {
+        display: none
+    }
+}
+
+
+/* Trang đăng nhập / đăng ký / đặt phòng của tôi */
+.auth-page {
+    padding: 120px 0 60px;
+    min-height: 100vh;
+    background: #f9f7f3
+}
+
+.auth-box {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08)
+}
+
+    .auth-box h2 {
+        font-size: 32px;
+        margin-bottom: 8px
+    }
+
+    .auth-box .sub {
+        color: var(--grey);
+        margin-bottom: 24px
+    }
+
+.auth-switch {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px
+}
+
+    .auth-switch a {
+        color: var(--gold)
+    }
+
+        .auth-switch a:hover {
+            text-decoration: underline
+        }
+
+.nav-hello {
+    color: var(--gold);
+    white-space: nowrap
+}
+
+/* Bảng danh sách đặt phòng */
+.table-bookings {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 15px
+}
+
+    .table-bookings th, .table-bookings td {
+        border-bottom: 1px solid #e5e0d8;
+        padding: 12px 10px;
+        text-align: left;
+        vertical-align: top
+    }
+
+    .table-bookings th {
+        background: #111;
+        color: #fff;
+        font-weight: 400;
+        letter-spacing: 1px;
+        font-size: 13px
+    }
+
+    .table-bookings .money {
+        color: var(--gold);
+        font-weight: 500;
+        white-space: nowrap
+    }
+
+.empty-box {
+    background: #fff;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08)
+}
+
+    .empty-box p {
+        color: var(--grey);
+        margin-bottom: 20px
+    }
+
+/* ===== Bản v2: chi tiết phòng, lọc phòng, dịch vụ, điểm đến, quản trị ===== */
+.room-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start
+}
+
+.filter-bar {
+    max-width: 860px;
+    margin: 32px auto 0
+}
+
+.card h3 a, .card h3 a:visited {
+    color: #111;
+    text-decoration: none
+}
+
+.card h3 a:hover {
+    color: var(--gold)
+}
+
+.svc .btn {
+    margin-top: 12px
+}
+
+@media (max-width: 800px) {
+    .room-detail {
+        grid-template-columns: 1fr
+    }
+}
+
+/* ===== BẢN V3: trang xác minh OTP ===== */
+.demo-otp{background:#fff8e6;border:1px solid #b9975b;color:#7a5c14;padding:12px 16px;text-align:center;margin:16px 0;font-size:15px}
+.demo-otp b{font-size:20px;letter-spacing:4px;color:#b9975b}
+.otp-input{text-align:center;font-size:22px;letter-spacing:6px;font-weight:600}
+.info{color:#2e7d32;background:#e8f5e9;border:1px solid #a5d6a7;padding:10px 14px;margin:12px 0}
+
+/* Bản v4: quản lý phòng + phân quyền */
+.avail{color:#2e7d32;font-weight:500}
+.soldout{color:#c62828;font-weight:600}
+.card.soldout{opacity:.55}
+.card.soldout img{filter:grayscale(60%)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px}
+.stat-box{background:#1d1d1d;border:1px solid #333;padding:16px;border-radius:4px}
+.stat-box h4{margin:0 0 8px;color:#e8dcc3}
+.stat-box p{margin:4px 0;color:#ccc}
+
+/* ===== BẢN V6-V7: liên hệ lễ tân, buffet, tìm kiếm, đánh giá ===== */
+.stars{color:#b9975b;letter-spacing:2px}
+.rating-line{color:#b9975b;font-weight:500;margin:6px 0}
+.rating-big{font-size:20px}
+.review-item{border-top:1px solid #ddd;padding:16px 0}
+.review-item .muted{color:#888;font-size:13px}
+.badge-on{display:inline-block;background:#2e7d32;color:#fff;padding:3px 10px;border-radius:12px;font-size:13px}
+.badge-off{display:inline-block;background:#999;color:#fff;padding:3px 10px;border-radius:12px;font-size:13px}
+.search-bar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:1100px;margin:24px auto;padding:0 20px}
+.search-bar input[type="text"]{flex:2;min-width:220px;padding:12px;border:1px solid #ccc;border-radius:4px;font-size:15px}
+.search-bar select{flex:1;min-width:160px;padding:12px;border:1px solid #ccc;border-radius:4px;font-size:15px;background:#fff}
+.star-input label{display:inline-block;margin-right:14px;font-size:16px;cursor:pointer}
+.star-input input{margin-right:4px}
+.filter-note{text-align:center;margin:16px 0;color:#555}
+.contact-duty{background:#f9f7f3;border:1px solid #e0d9c8;padding:20px 24px;border-radius:4px;margin:24px 0}
+.contact-duty h3{margin-top:0}
+.contact-duty ul{margin:8px 0 0;padding-left:20px}
+.contact-hotel{margin-top:40px}
+.contact-hotel h3{border-bottom:2px solid #b9975b;padding-bottom:8px}
+.staff-card h3{margin-bottom:4px}
+.staff-title{color:#888;font-size:14px;text-transform:uppercase;letter-spacing:1px}
+@media (max-width: 800px) {
+    .search-bar{flex-direction:column;align-items:stretch}
+    .search-bar input[type="text"],.search-bar select{width:100%}
+}

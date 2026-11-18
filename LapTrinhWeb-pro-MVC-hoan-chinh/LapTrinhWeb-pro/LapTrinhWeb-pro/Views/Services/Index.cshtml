@@ -1,0 +1,103 @@
+﻿@model List<LapTrinhWeb_pro.Models.ServiceInfo>
+@using LapTrinhWeb_pro.Models
+@{
+    Layout = null;
+    ViewBag.Title = "Dịch vụ";
+    // Bản v5: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch vụ — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="@Url.Action("Create", "Booking")">Đặt ngay</a>
+            }
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Dịch vụ đi kèm</p>
+                <h2>Để kỳ nghỉ trọn vẹn hơn</h2>
+                <p class="sub">4 dịch vụ đầu có thể đặt kèm khi đặt phòng. Các dịch vụ còn lại vui lòng liên hệ lễ tân 24/7 để đặt trước.</p>
+            </div>
+            <div class="grid grid4" style="margin-top:40px">
+                @foreach (var s in Model)
+                {
+                    <div class="card svc">
+                        <div class="icon">@s.Icon</div>
+                        <h3>@s.Name</h3>
+                        <p class="price">@ServiceCatalog.PriceText(s)</p>
+                        <p>@s.Description</p>
+                        @* Bản v6-v7: link sang trang thực đơn buffet. *@
+                        @if (s.Name.Contains("Buffet"))
+                        {
+                            <p><a href="@Url.Action("Index", "Buffet")">Xem thực đơn Buffet →</a></p>
+                        }
+                        @if (s.DbId.HasValue)
+                        {
+                            <a class="btn" href="@Url.Action("Create", "Booking", new { serviceId = s.DbId.Value })">Thêm vào đặt phòng</a>
+                        }
+                        else
+                        {
+                            <a class="btn dark" href="@Url.Action("Contact", "Home")">Liên hệ lễ tân</a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

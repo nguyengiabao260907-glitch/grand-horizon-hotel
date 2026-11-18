@@ -1,0 +1,245 @@
+﻿@model List<LapTrinhWeb_pro.Models.BOOKING>
+@using System.Linq
+@{
+    Layout = null;
+    ViewBag.Title = "Quản trị";
+    var rooms = ViewBag.Rooms as List<LapTrinhWeb_pro.Models.ROOM>;
+    var roomTypes = ViewBag.RoomTypes as List<LapTrinhWeb_pro.Models.ROOM_TYPE>;
+    var properties = ViewBag.Properties as List<LapTrinhWeb_pro.Models.PROPERTY>;
+    var stats = ViewBag.TypeStats as List<LapTrinhWeb_pro.Models.RoomTypeStat>;
+    var bookedUntil = ViewBag.BookedUntil as Dictionary<int, System.DateTime>;
+    var propertyNames = ViewBag.PropertyNames as Dictionary<int, string>;
+    int? selProperty = ViewBag.SelectedProperty as int?;
+    int? selRoomType = ViewBag.SelectedRoomType as int?;
+    string selStatus = ViewBag.SelectedStatus as string ?? "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Quản trị</p>
+                <h2>Quản lý khách sạn</h2>
+                <p class="sub">Chỉ tài khoản admin@grandhorizon.vn mới xem được trang này.</p>
+            </div>
+
+            @if (TempData["AdminMsg"] != null)
+            {
+                <p class="info">@TempData["AdminMsg"]</p>
+            }
+            @if (TempData["AdminError"] != null)
+            {
+                <p class="error">@TempData["AdminError"]</p>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <p class="error">@TempData["Error"]</p>
+            }
+
+            @* Bản v6-v7: quản lý thực đơn buffet (thêm/sửa/ẩn/xóa món). *@
+            <p style="margin-top:24px">
+                <a class="btn" href="@Url.Action("Manage", "Buffet")">Quản lý thực đơn Buffet</a>
+            </p>
+
+            <div style="margin-top:40px">
+                <h2>Phòng còn trống hôm nay</h2>
+                @if (stats == null || stats.Count == 0)
+                {
+                    <p>Chưa có loại phòng nào.</p>
+                }
+                else
+                {
+                    <div class="stat-grid">
+                        @foreach (var st in stats)
+                        {
+                            <div class="stat-box">
+                                <h4>@st.TypeName</h4>
+                                <p>@st.PropertyName</p>
+                                <p>Tổng: <b>@st.Total phòng</b> · Còn trống: <b class="avail">@st.Available</b> · Đang có khách: <b>@st.Booked</b></p>
+                                @if (!string.IsNullOrEmpty(st.BookedDetails))
+                                {
+                                    <p>@st.BookedDetails</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div style="margin-top:48px">
+                <h2>Tất cả phòng</h2>
+                <p><a class="btn" href="@Url.Action("AddRoom", "Admin")">+ Thêm phòng mới</a></p>
+                <form method="get" action="@Url.Action("Index", "Admin")" class="form-box filter-bar">
+                    <div class="row">
+                        <div class="field">
+                            <label>Khách sạn</label>
+                            <select name="property">
+                                <option value="">Tất cả khách sạn</option>
+                                @if (properties != null)
+                                {
+                                    foreach (var pr in properties)
+                                    {
+                                        <option value="@pr.property_id" @(selProperty.HasValue && selProperty.Value == pr.property_id ? "selected" : "")>@pr.property_name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Loại phòng</label>
+                            <select name="roomTypeId">
+                                <option value="">Tất cả loại phòng</option>
+                                @if (roomTypes != null)
+                                {
+                                    foreach (var t in roomTypes)
+                                    {
+                                        <option value="@t.room_type_id" @(selRoomType.HasValue && selRoomType.Value == t.room_type_id ? "selected" : "")>@t.name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Trạng thái</label>
+                            <select name="status">
+                                <option value="" @(selStatus == "" ? "selected" : "")>Tất cả</option>
+                                <option value="available" @(selStatus == "available" ? "selected" : "")>Còn trống</option>
+                                <option value="booked" @(selStatus == "booked" ? "selected" : "")>Đang có khách</option>
+                                <option value="maintenance" @(selStatus == "maintenance" ? "selected" : "")>Bảo trì</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" type="submit" style="width:100%">Lọc</button>
+                </form>
+
+                @if (rooms == null || rooms.Count == 0)
+                {
+                    <div class="empty-box" style="max-width:640px;margin:40px auto 0"><p>Không có phòng nào khớp bộ lọc.</p></div>
+                }
+                else
+                {
+                    <table class="table-bookings" style="margin-top:16px">
+                        <tr><th>Số phòng</th><th>Loại phòng</th><th>Khách sạn</th><th>Tầng</th><th>Trạng thái</th><th></th></tr>
+                        @foreach (var r in rooms)
+                        {
+                            string statusText;
+                            if (r.status == "Maintenance") { statusText = "Bảo trì"; }
+                            else if (bookedUntil != null && bookedUntil.ContainsKey(r.room_id)) { statusText = "Đang có khách đến " + bookedUntil[r.room_id].ToString("dd/MM/yyyy"); }
+                            else { statusText = "Còn trống"; }
+                            <tr>
+                                <td>@r.room_number</td>
+                                <td>@(r.ROOM_TYPE != null ? r.ROOM_TYPE.name : "—")</td>
+                                <td>@(r.ROOM_TYPE != null && propertyNames != null && propertyNames.ContainsKey(r.ROOM_TYPE.property_id) ? propertyNames[r.ROOM_TYPE.property_id] : "")</td>
+                                <td>@r.floor</td>
+                                <td>@statusText</td>
+                                <td>
+                                    <a href="@Url.Action("EditRoom", "Admin", new { id = r.room_id })">Sửa</a>
+                                    <form method="post" action="@Url.Action("DeleteRoom", "Admin")" style="display:inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa phòng @r.room_number?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.room_id">
+                                        <button type="submit" class="btn dark" style="padding:4px 12px">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            </div>
+
+            <div style="margin-top:48px">
+                <h2>Giá các loại phòng</h2>
+                @if (roomTypes != null)
+                {
+                    <table class="table-bookings" style="margin-top:16px">
+                        <tr><th>Loại phòng</th><th>Khách sạn (id)</th><th>Giá / đêm</th><th></th></tr>
+                        @foreach (var t in roomTypes)
+                        {
+                            <tr>
+                                <td>@t.name</td>
+                                <td>@t.property_id</td>
+                                <td class="money">@t.price_per_night.ToString("N0") đ</td>
+                                <td><a href="@Url.Action("EditPrice", "Admin", new { id = t.room_type_id })">Sửa giá</a></td>
+                            </tr>
+                        }
+                    </table>
+                }
+            </div>
+
+            <div style="margin-top:48px">
+                <h2>Tất cả đặt phòng</h2>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <div class="empty-box" style="max-width:640px;margin:40px auto 0"><p>Chưa có đặt phòng nào.</p></div>
+                }
+                else
+                {
+                    <table class="table-bookings" style="margin-top:16px">
+                        <tr><th>Mã</th><th>Khách</th><th>Khách sạn</th><th>Phòng</th><th>Nhận phòng</th><th>Trả phòng</th><th>Trạng thái</th><th>Tổng tiền</th><th>Hủy</th></tr>
+                        @foreach (var b in Model)
+                        {
+                            var detail = b.BOOKING_DETAIL.FirstOrDefault();
+                            string roomName = detail != null && detail.ROOM != null && detail.ROOM.ROOM_TYPE != null ? detail.ROOM.ROOM_TYPE.name : "—";
+                            string roomNo = detail != null && detail.ROOM != null ? detail.ROOM.room_number : "";
+                            string guestName = b.GUEST != null ? (b.GUEST.first_name + " " + b.GUEST.last_name).Trim() : "—";
+                            string bookingStatus = b.check_out_date.Date <= System.DateTime.Today ? "Đã trả phòng" : (b.check_in_date.Date <= System.DateTime.Today ? "Đang ở" : "Sắp tới");
+                            <tr>
+                                <td>#@b.book_id</td>
+                                <td>@guestName<br><small>@(b.GUEST != null ? b.GUEST.email : "")</small></td>
+                                <td>@(b.PROPERTY != null ? b.PROPERTY.property_name : "—")</td>
+                                <td>@roomName@(string.IsNullOrEmpty(roomNo) ? "" : " (Phòng " + roomNo + ")")</td>
+                                <td>@b.check_in_date.ToString("dd/MM/yyyy")</td>
+                                <td>@b.check_out_date.ToString("dd/MM/yyyy")</td>
+                                <td>@bookingStatus</td>
+                                <td class="money">@b.total_amount.ToString("N0") đ</td>
+                                <td>
+                                    <form method="post" action="@Url.Action("CancelBooking", "Admin")" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #@b.book_id?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@b.book_id">
+                                        <button type="submit" class="btn dark" style="padding:4px 12px">Hủy đơn</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

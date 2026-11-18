@@ -1,0 +1,112 @@
+﻿@model LapTrinhWeb_pro.Models.BOOKING
+@using System.Linq
+@{
+    Layout = null;
+    ViewBag.Title = "Xác nhận đặt phòng";
+    // Bản v5: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+    var detail = Model.BOOKING_DETAIL.FirstOrDefault();
+    string roomName = detail != null && detail.ROOM != null && detail.ROOM.ROOM_TYPE != null ? detail.ROOM.ROOM_TYPE.name : "—";
+    string roomNo = detail != null && detail.ROOM != null ? detail.ROOM.room_number : "";
+    int nights = (Model.check_out_date.Date - Model.check_in_date.Date).Days;
+    string services = Model.SERVICE_BOOKING != null && Model.SERVICE_BOOKING.Count > 0
+        ? string.Join(", ", Model.SERVICE_BOOKING.Where(s => s.SERVICE != null).Select(s => s.SERVICE.service_name))
+        : "Không có dịch vụ thêm";
+    string guestName = Model.GUEST != null ? (Model.GUEST.first_name + " " + Model.GUEST.last_name).Trim() : "—";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đặt phòng — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="form-box" style="max-width:640px;margin:0 auto">
+                <div class="center">
+                    <p class="kicker">Grand Horizon Hotel</p>
+                    <h2>Đặt Phòng Thành Công!</h2>
+                    <p class="sub">Cảm ơn @guestName, đặt phòng của bạn đã được ghi nhận.</p>
+                </div>
+                <table class="table-bookings">
+                    <tr><th>Mã đặt phòng</th><td>#@Model.book_id</td></tr>
+                    <tr><th>Phòng</th><td>@roomName@(string.IsNullOrEmpty(roomNo) ? "" : " (Phòng " + roomNo + ")")</td></tr>
+                    <tr><th>Nhận phòng</th><td>@Model.check_in_date.ToString("dd/MM/yyyy")</td></tr>
+                    <tr><th>Trả phòng</th><td>@Model.check_out_date.ToString("dd/MM/yyyy")</td></tr>
+                    <tr><th>Số đêm</th><td>@nights đêm</td></tr>
+                    <tr><th>Dịch vụ</th><td>@services</td></tr>
+                    <tr><th>Tổng tiền</th><td class="money">@Model.total_amount.ToString("N0") đ</td></tr>
+                </table>
+                <p style="margin-top:20px;text-align:center">
+                    @if (!isAdmin)
+                    {
+                        <a class="btn" href="@Url.Action("MyBookings", "Booking")">Xem đơn hàng của tôi →</a>
+                    }
+                    <a class="btn dark" href="@Url.Action("Index", "Home")">Về trang chủ</a>
+                </p>
+                @if (Model.check_out_date.Date > System.DateTime.Today && Session["GuestId"] != null && (int)Session["GuestId"] == Model.guest_id)
+                {
+                    <form method="post" action="@Url.Action("Cancel", "Booking")" onsubmit="return confirm('Bạn chắc chắn muốn hủy đặt phòng này?');" style="margin-top:16px;text-align:center">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.book_id">
+                        <button type="submit" class="btn dark">Hủy đơn này</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

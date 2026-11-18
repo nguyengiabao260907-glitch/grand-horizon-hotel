@@ -1,0 +1,93 @@
+﻿@model LapTrinhWeb_pro.Models.ROOM
+@{
+    Layout = null;
+    ViewBag.Title = "Sửa phòng";
+    var roomTypes = ViewBag.RoomTypes as List<LapTrinhWeb_pro.Models.ROOM_TYPE>;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa phòng @Model.room_number — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section class="auth-page">
+        <div class="wrap">
+            <div class="auth-box form-box">
+                <div class="center">
+                    <p class="kicker">Quản trị</p>
+                    <h2>Sửa phòng @Model.room_number</h2>
+                    <p class="sub">@(Model.ROOM_TYPE != null ? Model.ROOM_TYPE.name : "") — tầng @Model.floor</p>
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <p class="error">@ViewBag.Error</p>
+                }
+                <form method="post" action="@Url.Action("EditRoom", "Admin")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.room_id">
+                    <div class="field">
+                        <label>Loại phòng *</label>
+                        <select name="roomTypeId" required>
+                            @if (roomTypes != null)
+                            {
+                                foreach (var t in roomTypes)
+                                {
+                                    <option value="@t.room_type_id" @(t.room_type_id == Model.room_type_id ? "selected" : "")>@t.name — khách sạn id @t.property_id — @t.price_per_night.ToString("N0") đ/đêm</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Số phòng *</label>
+                        <input type="text" name="roomNumber" value="@Model.room_number" required>
+                    </div>
+                    <div class="field">
+                        <label>Tầng *</label>
+                        <input type="number" name="floor" min="1" value="@Model.floor" required>
+                    </div>
+                    <div class="field">
+                        <label>Trạng thái *</label>
+                        <select name="status" required>
+                            <option value="Available" @(Model.status == "Available" ? "selected" : "")>Available — sẵn sàng cho thuê</option>
+                            <option value="Maintenance" @(Model.status == "Maintenance" ? "selected" : "")>Maintenance — đang bảo trì (không cho đặt)</option>
+                        </select>
+                    </div>
+                    <button class="btn" type="submit" style="width:100%">Lưu thay đổi</button>
+                </form>
+                <p class="auth-switch"><a href="@Url.Action("Index", "Admin")">← Về trang quản trị</a></p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

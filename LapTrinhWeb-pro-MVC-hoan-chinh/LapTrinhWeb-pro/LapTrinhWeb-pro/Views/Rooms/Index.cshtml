@@ -1,0 +1,239 @@
+﻿@model List<LapTrinhWeb_pro.Models.ROOM_TYPE>
+@using LapTrinhWeb_pro.Models
+@{
+    Layout = null;
+    ViewBag.Title = "Phòng";
+    // Bản v5: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+    var properties = ViewBag.Properties as List<LapTrinhWeb_pro.Models.PROPERTY>;
+    // Bản v4: số phòng còn trống của từng loại (RoomsController tính sẵn).
+    var availCounts = ViewBag.AvailCounts as Dictionary<int, int>;
+    var totalCounts = ViewBag.TotalCounts as Dictionary<int, int>;
+    // Bản v6-v7: điểm đánh giá + tìm kiếm theo địa chỉ.
+    var ratings = ViewBag.Ratings as Dictionary<int, RatingInfo>;
+    var provinces = ViewBag.Provinces as List<string>;
+    string selQ = ViewBag.Q as string ?? "";
+    string selProvince = ViewBag.Province as string ?? "";
+    string selDistrict = ViewBag.District as string ?? "";
+    bool isFiltering = !string.IsNullOrWhiteSpace(selQ) || !string.IsNullOrWhiteSpace(selProvince) || !string.IsNullOrWhiteSpace(selDistrict);
+    string filterText = "";
+    if (!string.IsNullOrWhiteSpace(selQ)) { filterText += "từ khóa \"" + selQ + "\""; }
+    if (!string.IsNullOrWhiteSpace(selProvince)) { filterText += (filterText.Length > 0 ? ", " : "") + "tỉnh " + selProvince; }
+    if (!string.IsNullOrWhiteSpace(selDistrict)) { filterText += (filterText.Length > 0 ? ", " : "") + "quận/huyện " + selDistrict; }
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="@Url.Action("Create", "Booking")">Đặt ngay</a>
+            }
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Phòng &amp; Suite</p>
+                <h2>Tìm phòng phù hợp với bạn</h2>
+                <p class="sub">Lọc theo địa điểm, giá và số khách. Nếu bạn chọn ngày nhận / trả phòng, chỉ những loại phòng còn trống trong khoảng ngày đó mới hiện ra.</p>
+            </div>
+
+            <form method="get" action="@Url.Action("Index", "Rooms")" class="form-box filter-bar">
+                <div class="row">
+                    <div class="field">
+                        <label>Tìm theo tên khách sạn, địa chỉ hoặc loại phòng</label>
+                        <input type="text" name="q" value="@selQ" placeholder="Ví dụ: Đà Nẵng, Hội An, Deluxe...">
+                    </div>
+                    <div class="field">
+                        <label>Tỉnh / Thành phố</label>
+                        <select name="province" id="provinceSelect">
+                            <option value="">Tất cả tỉnh</option>
+                            @if (provinces != null)
+                            {
+                                foreach (var prov in provinces)
+                                {
+                                    <option value="@prov" @(selProvince == prov ? "selected" : "")>@prov</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Quận / Huyện</label>
+                        <select name="district" id="districtSelect" @(string.IsNullOrWhiteSpace(selProvince) ? "disabled" : "")>
+                            <option value="">Tất cả quận / huyện</option>
+                            @if (!string.IsNullOrWhiteSpace(selProvince) && !string.IsNullOrWhiteSpace(selDistrict))
+                            {
+                                <option value="@selDistrict" selected>@selDistrict</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Địa điểm</label>
+                        <select name="property">
+                            <option value="">Tất cả địa điểm</option>
+                            @if (properties != null)
+                            {
+                                foreach (var p in properties)
+                                {
+                                    <option value="@p.property_id" @(ViewBag.Property == p.property_id.ToString() ? "selected" : "")>@p.property_name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Số khách</label>
+                        <select name="guests">
+                            <option value="">Bất kỳ</option>
+                            <option value="2" @(ViewBag.Guests == 2 ? "selected" : "")>2 khách</option>
+                            <option value="3" @(ViewBag.Guests == 3 ? "selected" : "")>3 khách</option>
+                            <option value="4" @(ViewBag.Guests == 4 ? "selected" : "")>4 khách</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field"><label>Giá thấp nhất (đ/đêm)</label><input type="number" name="minPrice" min="0" step="100000" value="@ViewBag.MinPrice" placeholder="0"></div>
+                    <div class="field"><label>Giá cao nhất (đ/đêm)</label><input type="number" name="maxPrice" min="0" step="100000" value="@ViewBag.MaxPrice" placeholder="10000000"></div>
+                </div>
+                <div class="row">
+                    <div class="field"><label>Nhận phòng</label><input type="date" name="checkin" value="@ViewBag.Checkin"></div>
+                    <div class="field"><label>Trả phòng</label><input type="date" name="checkout" value="@ViewBag.Checkout"></div>
+                </div>
+                <button class="btn" type="submit" style="width:100%">Tìm phòng</button>
+            </form>
+
+            @if (isFiltering)
+            {
+                <p class="filter-note">Đang lọc: @filterText — <a href="@Url.Action("Index", "Rooms")">Xóa bộ lọc</a></p>
+            }
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="empty-box" style="max-width:640px;margin:40px auto 0">
+                    <p>Không tìm thấy khách sạn/phòng phù hợp, thử đổi tỉnh/quận hoặc từ khóa khác.</p>
+                    <a class="btn" href="@Url.Action("Index", "Rooms")">Xem tất cả phòng</a>
+                </div>
+            }
+            else
+            {
+                <div class="grid" style="margin-top:40px">
+                    @foreach (var room in Model)
+                    {
+                        var info = RoomCatalog.ByName(room.name);
+                        int avail = availCounts != null && availCounts.ContainsKey(room.room_type_id) ? availCounts[room.room_type_id] : -1;
+                        int total = totalCounts != null && totalCounts.ContainsKey(room.room_type_id) ? totalCounts[room.room_type_id] : -1;
+                        // Bản v6-v7: điểm đánh giá (chưa ai vote thì mặc định 5.0).
+                        var rt = ratings != null && ratings.ContainsKey(room.room_type_id) ? ratings[room.room_type_id] : new RatingInfo { Average = 5.0, Count = 0 };
+                        <div class="card@(avail == 0 ? " soldout" : "")">
+                            <a href="@Url.Action("Details", "Rooms", new { id = room.room_type_id })"><img src="@info.ImageUrl" alt="@room.name"></a>
+                            <div class="body">
+                                <h3><a href="@Url.Action("Details", "Rooms", new { id = room.room_type_id })">@room.name</a></h3>
+                                <p class="price">@room.price_per_night.ToString("N0") đ / đêm</p>
+                                <p class="rating-line">@RatingHelper.Line(rt)</p>
+                                <p>@(room.PROPERTY != null ? room.PROPERTY.property_name : "") — Tối đa @info.MaxGuests khách, @info.AreaM2 m2, @info.View.</p>
+                                @if (avail >= 0)
+                                {
+                                    if (avail > 0)
+                                    {
+                                        <p class="avail">Còn @avail/@total phòng trống</p>
+                                        <a class="btn" href="@Url.Action("Details", "Rooms", new { id = room.room_type_id })">Xem chi tiết</a>
+                                    }
+                                    else
+                                    {
+                                        <p class="soldout">Hết phòng</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <a class="btn" href="@Url.Action("Details", "Rooms", new { id = room.room_type_id })">Xem chi tiết</a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+    @* Bản v6-v7: dropdown Quận/Huyện nạp theo tỉnh đã chọn (qua /Rooms/Districts). *@
+    <script>
+        (function () {
+            var prov = document.getElementById('provinceSelect');
+            var dist = document.getElementById('districtSelect');
+            if (!prov || !dist) return;
+            var selectedDistrict = '@selDistrict';
+            function loadDistricts() {
+                var p = prov.value;
+                dist.innerHTML = '<option value="">Tất cả quận / huyện</option>';
+                if (!p) { dist.disabled = true; return; }
+                dist.disabled = false;
+                fetch('@Url.Action("Districts", "Rooms")?province=' + encodeURIComponent(p))
+                    .then(function (r) { return r.json(); })
+                    .then(function (list) {
+                        list.forEach(function (d) {
+                            var o = document.createElement('option');
+                            o.value = d.name; o.textContent = d.name;
+                            if (d.name === selectedDistrict) o.selected = true;
+                            dist.appendChild(o);
+                        });
+                    });
+            }
+            prov.addEventListener('change', function () { selectedDistrict = ''; loadDistricts(); });
+            if (prov.value) loadDistricts();
+        })();
+    </script>
+</body>
+</html>

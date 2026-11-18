@@ -1,0 +1,89 @@
+﻿@model LapTrinhWeb_pro.Models.BuffetItem
+@{
+    Layout = null;
+    ViewBag.Title = "Thêm món mới";
+    var categories = ViewBag.Categories as string[] ?? new[] { "Món chính", "Món tráng miệng", "Đồ uống" };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm món mới — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Quản trị</p>
+                <h2>Thêm món mới</h2>
+                <p class="sub">Món chính và món tráng miệng để giá 0 (đã bao gồm trong giá buffet); đồ uống ghi giá bán riêng.</p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <p class="error">@ViewBag.Error</p>
+            }
+
+            <form method="post" action="@Url.Action("Add", "Buffet")" class="form-box" style="max-width:640px">
+                @Html.AntiForgeryToken()
+                <div class="field">
+                    <label>Tên món *</label>
+                    <input type="text" name="name" required maxlength="100" placeholder="Ví dụ: Phở Bò Tái Nạm">
+                </div>
+                <div class="field">
+                    <label>Nhóm món *</label>
+                    <select name="category">
+                        @foreach (var c in categories)
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Mô tả</label>
+                    <textarea name="description" rows="3" maxlength="500" placeholder="Mô tả ngắn về món ăn..."></textarea>
+                </div>
+                <div class="field">
+                    <label>Giá (đ) — 0 = đã bao gồm</label>
+                    <input type="number" name="price" min="0" step="1000" value="0" required>
+                </div>
+                <div class="field">
+                    <label><input type="checkbox" name="isAvailable" value="true" checked> Đang phục vụ (hiện trên trang thực đơn cho khách)</label>
+                </div>
+                <button class="btn" type="submit" style="width:100%">Thêm món</button>
+                <a class="btn dark" href="@Url.Action("Manage", "Buffet")" style="display:block;text-align:center;margin-top:12px">← Quay lại quản lý thực đơn</a>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

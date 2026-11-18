@@ -1,0 +1,244 @@
+﻿@model LapTrinhWeb_pro.Models.ROOM_TYPE
+@using LapTrinhWeb_pro.Models
+@{
+    Layout = null;
+    ViewBag.Title = Model.name;
+    // Bản v5: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+    var info = ViewBag.Info as RoomInfo ?? RoomCatalog.ByName(Model.name);
+    var rooms = ViewBag.Rooms as List<LapTrinhWeb_pro.Models.ROOM>;
+    var similar = ViewBag.Similar as List<LapTrinhWeb_pro.Models.ROOM_TYPE>;
+    // Bản v4: phòng đã có khách (không liệt kê ở bảng trên) + ngày trả phòng.
+    var bookedRooms = ViewBag.BookedRooms as List<LapTrinhWeb_pro.Models.ROOM>;
+    var maintenanceRooms = ViewBag.MaintenanceRooms as List<LapTrinhWeb_pro.Models.ROOM>;
+    var bookedUntil = ViewBag.BookedUntil as Dictionary<int, System.DateTime>;
+    string selCheckin = ViewBag.Checkin as string ?? "";
+    string selCheckout = ViewBag.Checkout as string ?? "";
+    // Ghi chú phòng đã có khách / đang bảo trì, tính sẵn ở đây để markup dưới gọn.
+    string bookedNote = "";
+    if (bookedRooms != null && bookedRooms.Count > 0)
+    {
+        bookedNote = string.Join("; ", bookedRooms.Select(r => "Phòng " + r.room_number + " đã có khách đến " + (bookedUntil != null && bookedUntil.ContainsKey(r.room_id) ? bookedUntil[r.room_id].ToString("dd/MM/yyyy") : "?")));
+    }
+    string maintenanceNote = "";
+    if (maintenanceRooms != null && maintenanceRooms.Count > 0)
+    {
+        maintenanceNote = "Phòng " + string.Join(", ", maintenanceRooms.Select(r => r.room_number)) + " đang bảo trì.";
+    }
+    // Bản v6-v7: điểm đánh giá + bình luận thật từ bảng REVIEW
+    // (chưa ai vote thì mặc định 5.0 — xem Models/RatingHelper.cs).
+    var rating = ViewBag.Rating as RatingInfo ?? new RatingInfo { Average = 5.0, Count = 0 };
+    var reviews = ViewBag.Reviews as List<Review> ?? new List<Review>();
+    var myReview = ViewBag.MyReview as Review;
+    bool loggedIn = ViewBag.LoggedIn != null && (bool)ViewBag.LoggedIn;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.name — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="@Url.Action("Create", "Booking", new { roomTypeId = Model.room_type_id })">Đặt ngay</a>
+            }
+        </div>
+    </nav>
+
+    <section>
+        <div class="wrap">
+            <p><a href="@Url.Action("Index", "Rooms")">← Tất cả phòng</a></p>
+            <div class="room-detail">
+                <div>
+                    <img src="@info.ImageUrl" alt="@Model.name" style="width:100%;border-radius:4px">
+                </div>
+                <div>
+                    <p class="kicker">@(Model.PROPERTY != null ? Model.PROPERTY.property_name : "Grand Horizon")</p>
+                    <h2>@Model.name</h2>
+                    <p class="price" style="font-size:24px">@Model.price_per_night.ToString("N0") đ / đêm</p>
+                    <p>@info.Description</p>
+                    <table class="table-bookings">
+                        <tr><th>Số khách tối đa</th><td>@info.MaxGuests khách</td></tr>
+                        <tr><th>Diện tích</th><td>@info.AreaM2 m2</td></tr>
+                        <tr><th>Giường</th><td>@info.Bed</td></tr>
+                        <tr><th>View</th><td>@info.View</td></tr>
+                        <tr><th>Phòng còn trống</th><td>@(rooms != null ? string.Join(", ", rooms.Select(r => r.room_number)) : "—")</td></tr>
+                    </table>
+                    <h3 style="margin-top:20px">Tiện nghi</h3>
+                    <ul>
+                        @foreach (var a in info.Amenities)
+                        {
+                            <li>@a</li>
+                        }
+                    </ul>
+                    <h3 style="margin-top:20px">Đánh giá của khách</h3>
+                    <p class="rating-line rating-big">@RatingHelper.Line(rating)</p>
+                    @if (bookedNote.Length > 0)
+                    {
+                        <p class="soldout">@bookedNote</p>
+                    }
+                    @if (maintenanceNote.Length > 0)
+                    {
+                        <p class="soldout">@maintenanceNote</p>
+                    }
+                    @if (rooms != null && rooms.Count > 0)
+                    {
+                        if (!isAdmin)
+                        {
+                            <a class="btn" href="@Url.Action("Create", "Booking", new { roomTypeId = Model.room_type_id, checkin = selCheckin, checkout = selCheckout })" style="margin-top:16px">Đặt phòng này</a>
+                        }
+                    }
+                    else
+                    {
+                        <p class="soldout" style="margin-top:16px">Hết phòng trong khoảng ngày đã chọn.</p>
+                    }
+                </div>
+            </div>
+
+            @* Bản v6-v7: danh sách đánh giá thật + form gửi/cập nhật đánh giá. *@
+            <div class="reviews-section" style="margin-top:48px">
+                <h2>Đánh giá của khách</h2>
+                @if (TempData["ReviewMsg"] != null)
+                {
+                    <p class="info">@TempData["ReviewMsg"]</p>
+                }
+                @if (TempData["ReviewError"] != null)
+                {
+                    <p class="error">@TempData["ReviewError"]</p>
+                }
+                @if (reviews.Count == 0)
+                {
+                    <p>Chưa có đánh giá nào cho loại phòng này. Hãy là người đầu tiên đánh giá nhé!</p>
+                }
+                else
+                {
+                    foreach (var rv in reviews)
+                    {
+                        <div class="review-item">
+                            <p><b>@rv.GuestName</b> <span class="stars">@RatingHelper.StarsText(rv.rating)</span> <span class="muted">@rv.created_date.ToString("dd/MM/yyyy")</span></p>
+                            @if (!string.IsNullOrWhiteSpace(rv.comment))
+                            {
+                                <p>@rv.comment</p>
+                            }
+                            @if (isAdmin)
+                            {
+                                <form method="post" action="@Url.Action("Delete", "Reviews")" onsubmit="return confirm('Xóa bình luận này?');" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@rv.review_id">
+                                    <input type="hidden" name="roomTypeId" value="@Model.room_type_id">
+                                    <button type="submit" class="btn dark">Xóa bình luận</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                }
+
+                @if (!isAdmin)
+                {
+                    if (loggedIn)
+                    {
+                        <h3 style="margin-top:32px">@(myReview != null ? "Cập nhật đánh giá của bạn" : "Viết đánh giá của bạn")</h3>
+                        <form method="post" action="@Url.Action("Create", "Reviews")" class="form-box" style="max-width:640px">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="roomTypeId" value="@Model.room_type_id">
+                            <div class="field">
+                                <label>Số sao *</label>
+                                <div class="star-input">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <label><input type="radio" name="rating" value="@i" @(myReview != null && myReview.rating == i ? "checked" : "")> @i ★</label>
+                                    }
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>Bình luận (tối đa 1000 ký tự)</label>
+                                <textarea name="comment" rows="4" maxlength="1000">@(myReview != null ? myReview.comment : "")</textarea>
+                            </div>
+                            <button class="btn" type="submit">Gửi đánh giá</button>
+                            @if (myReview != null)
+                            {
+                                <p class="muted">Bạn đã đánh giá @myReview.rating sao. Gửi lại để cập nhật đánh giá của mình.</p>
+                            }
+                        </form>
+                    }
+                    else
+                    {
+                        <p style="margin-top:32px"><a href="@Url.Action("Login", "Account", new { returnUrl = Url.Action("Details", "Rooms", new { id = Model.room_type_id }) })">Đăng nhập để đánh giá</a></p>
+                    }
+                }
+            </div>
+
+            @if (similar != null && similar.Count > 0)
+            {
+                <div style="margin-top:48px">
+                    <div class="center"><p class="kicker">Gợi ý thêm</p><h2>Phòng tương tự</h2></div>
+                    <div class="grid">
+                        @foreach (var s in similar)
+                        {
+                            var sinfo = RoomCatalog.ByName(s.name);
+                            <div class="card">
+                                <a href="@Url.Action("Details", "Rooms", new { id = s.room_type_id })"><img src="@sinfo.ImageUrl" alt="@s.name"></a>
+                                <div class="body">
+                                    <h3><a href="@Url.Action("Details", "Rooms", new { id = s.room_type_id })">@s.name</a></h3>
+                                    <p class="price">@s.price_per_night.ToString("N0") đ / đêm</p>
+                                    <p>Tối đa @sinfo.MaxGuests khách, @sinfo.AreaM2 m2.</p>
+                                    <a class="btn" href="@Url.Action("Details", "Rooms", new { id = s.room_type_id })">Xem chi tiết</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+</body>
+</html>

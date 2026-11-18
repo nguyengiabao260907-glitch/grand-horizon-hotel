@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{349C5851-65DF-11DA-9384-00065B846F21}") = "LapTrinhWeb-pro", "LapTrinhWeb-pro\LapTrinhWeb-pro.csproj", "{2733D94A-B28F-4475-910A-23572E766D75}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2733D94A-B28F-4475-910A-23572E766D75}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{2733D94A-B28F-4475-910A-23572E766D75}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{2733D94A-B28F-4475-910A-23572E766D75}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{2733D94A-B28F-4475-910A-23572E766D75}.Release|Any CPU.Build.0 = Release|AnyCPU
+	EndGlobalSection
+EndGlobal

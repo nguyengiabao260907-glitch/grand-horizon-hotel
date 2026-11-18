@@ -1,0 +1,389 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Horizon Hotel — Khách Sạn & Khu Nghỉ Dưỡng</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+ 
+</head>
+<body>
+    @{
+        // Bản v5: admin chỉ quản lý phòng, không đặt phòng — dùng để ẩn
+        // các lối vào đặt phòng (menu, nút, form) khỏi tài khoản admin.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+        // Bản v6-v7: điểm đánh giá từng loại phòng + danh sách tỉnh cho
+        // thanh tìm kiếm (chưa ai vote thì mặc định 5.0).
+        var homeRatings = ViewBag.RoomRatings as Dictionary<int, LapTrinhWeb_pro.Models.RatingInfo>;
+        var homeProvinces = ViewBag.Provinces as List<string>;
+        Func<int, string> homeRatingLine = id =>
+        {
+            var r = homeRatings != null && homeRatings.ContainsKey(id)
+                ? homeRatings[id]
+                : new LapTrinhWeb_pro.Models.RatingInfo { Average = 5.0, Count = 0 };
+            return LapTrinhWeb_pro.Models.RatingHelper.Line(r);
+        };
+    }
+
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="@Url.Action("Index", "Home")#dat-phong">Đặt ngay</a>
+            }
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1800&auto=format&fit=crop" alt="Grand Horizon Hotel">
+        <div class="inner">
+            <p class="kicker">Khách sạn & Khu nghỉ dưỡng 4★</p>
+            <h1>Khám phá<br>Grand Horizon</h1>
+            <p>Nơi mỗi khoảnh khắc đều trở thành kỷ niệm</p>
+            @if (!isAdmin)
+            {
+                <a class="btn" href="#dat-phong">Đặt phòng ngay</a>
+            }
+        </div>
+    </header>
+
+    <!-- THANH ĐẶT PHÒNG -->
+    <div class="booking-bar">
+        <div>
+            <label>ĐIỂM ĐẾN</label>
+            <select id="heroDest"><option>Đà Nẵng</option><option>Hội An</option><option>Sài Gòn</option><option>Đà Lạt</option><option>Nha Trang</option><option>Phú Quốc</option><option>Hà Nội</option></select>
+        </div>
+        <div><label>NHẬN PHÒNG</label><input type="date" id="heroIn"></div>
+        <div><label>TRẢ PHÒNG</label><input type="date" id="heroOut"></div>
+        <div>
+            <label>KHÁCH</label>
+            <select id="heroGuests"><option>1 khách</option><option selected>2 khách</option><option>3 khách</option><option>4 khách</option></select>
+        </div>
+        <button class="btn" id="heroCheck" type="button">Kiểm tra giá</button>
+    </div>
+
+    <!-- THANH TÌM KIẾM THEO ĐỊA CHỈ (bản v6-v7) -->
+    <form method="get" action="@Url.Action("Index", "Rooms")" class="search-bar">
+        <input type="text" name="q" placeholder="Tìm khách sạn, địa chỉ hoặc loại phòng...">
+        <select name="province" id="provinceSelect">
+            <option value="">Tất cả tỉnh</option>
+            @if (homeProvinces != null)
+            {
+                foreach (var prov in homeProvinces)
+                {
+                    <option value="@prov">@prov</option>
+                }
+            }
+        </select>
+        <select name="district" id="districtSelect" disabled>
+            <option value="">Tất cả quận / huyện</option>
+        </select>
+        <button class="btn" type="submit">Tìm phòng</button>
+    </form>
+
+    <!-- ĐIỂM ĐẾN -->
+    <section id="diem-den" class="dark-sec">
+        <div class="wrap center">
+            <p class="kicker">Điểm đến nổi bật</p>
+            <h2>Mỗi khoảnh khắc, một hành trình mới</h2>
+            <p>Bảy điểm đến, bảy cảm xúc khác nhau — tất cả đều có Grand Horizon đón bạn.</p>
+            <div class="carousel">
+                <div class="slide active">
+                    <img src="https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1600&auto=format&fit=crop" alt="Hội An">
+                    <div class="slide-card"><h3>Hội An</h3><p>Phố cổ đèn lồng, sông Hoài lặng trôi — nghỉ dưỡng chậm rãi giữa di sản.</p><a href="@Url.Action("Details", "Destinations", new { id = 3 })">Xem khách sạn →</a></div>
+                </div>
+                <div class="slide">
+                    <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=1600&auto=format&fit=crop" alt="Sài Gòn">
+                    <div class="slide-card"><h3>Sài Gòn</h3><p>Thành phố không ngủ, ẩm thực đường phố và nhịp sống hiện đại.</p><a href="@Url.Action("Details", "Destinations", new { id = 2 })">Xem khách sạn →</a></div>
+                </div>
+                <div class="slide">
+                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1600&auto=format&fit=crop" alt="Đà Lạt">
+                    <div class="slide-card"><h3>Đà Lạt</h3><p>Sương sớm, đồi thông và cà phê nóng — trốn phố về với núi rừng.</p><a href="@Url.Action("Details", "Destinations", new { id = 4 })">Xem khách sạn →</a></div>
+                </div>
+                <button class="arrow" id="prevSlide" type="button">‹</button>
+                <button class="arrow" id="nextSlide" type="button">›</button>
+                <p id="slideCount" style="margin-top:16px;color:#bbb">1 / 3</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- KHÁM PHÁ THÊM -->
+    <section class="center">
+        <div class="wrap">
+            <p class="kicker">Khám phá thêm</p>
+            <h2>Không gian nghỉ dưỡng của bạn</h2>
+            <p>Hồ bơi vô cực, spa, nhà hàng và quầy bar — mọi thứ đều trong tầm tay.</p>
+        </div>
+    </section>
+
+    <!-- PHÒNG -->
+    <section id="phong" style="padding-top:0">
+        <div class="wrap">
+            <div class="center"><p class="kicker">Phòng & Suite</p><h2>Chăm chút từng chi tiết</h2></div>
+            @{
+                // Bản v4: số phòng còn trống hôm nay (HomeController.Index tính sẵn).
+                var roomAvail = ViewBag.RoomAvail as Dictionary<int, int>;
+                var roomTotal = ViewBag.RoomTotal as Dictionary<int, int>;
+            }
+            <div class="grid">
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 1 })"><img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1200&auto=format&fit=crop" alt="Standard"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 1 })">Standard</a></h3><p class="price">1.200.000 đ / đêm</p><p class="rating-line">@homeRatingLine(1)</p><p>Tối đa 2 khách. Phòng ấm cúng, view thành phố, đầy đủ tiện nghi.</p>@if (roomAvail != null && roomAvail.ContainsKey(1))
+                    {
+                        if (roomAvail[1] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[1]/@roomTotal[1] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('standard')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 1 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('standard')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 1 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 2 })"><img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1200&auto=format&fit=crop" alt="Deluxe"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 2 })">Deluxe</a></h3><p class="price">2.200.000 đ / đêm</p><p class="rating-line">@homeRatingLine(2)</p><p>Tối đa 2 khách. Rộng rãi, ban công hướng biển, bồn tắm riêng.</p>@if (roomAvail != null && roomAvail.ContainsKey(2))
+                    {
+                        if (roomAvail[2] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[2]/@roomTotal[2] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('deluxe')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 2 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('deluxe')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 2 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 3 })"><img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop" alt="Executive Suite"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 3 })">Executive Suite</a></h3><p class="price">4.500.000 đ / đêm</p><p class="rating-line">@homeRatingLine(3)</p><p>Tối đa 4 khách. Suite cao cấp, phòng khách riêng, view toàn cảnh.</p>@if (roomAvail != null && roomAvail.ContainsKey(3))
+                    {
+                        if (roomAvail[3] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[3]/@roomTotal[3] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('suite')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 3 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('suite')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 3 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 4 })"><img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1200&auto=format&fit=crop" alt="Family Suite"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 4 })">Family Suite</a></h3><p class="price">3.800.000 đ / đêm</p><p class="rating-line">@homeRatingLine(4)</p><p>Tối đa 4 khách. Suite gia đình 2 phòng ngủ, gần hồ bơi.</p>@if (roomAvail != null && roomAvail.ContainsKey(4))
+                    {
+                        if (roomAvail[4] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[4]/@roomTotal[4] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('family')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 4 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('family')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 4 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 5 })"><img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=1200&auto=format&fit=crop" alt="Ocean View Deluxe"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 5 })">Ocean View Deluxe</a></h3><p class="price">2.800.000 đ / đêm</p><p class="rating-line">@homeRatingLine(5)</p><p>Tối đa 3 khách. View biển trực diện, ban công ngắm bình minh.</p>@if (roomAvail != null && roomAvail.ContainsKey(5))
+                    {
+                        if (roomAvail[5] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[5]/@roomTotal[5] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('ocean')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 5 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('ocean')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 5 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+                <div class="card">
+                    <a href="@Url.Action("Details", "Rooms", new { id = 6 })"><img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200&auto=format&fit=crop" alt="Presidential Suite"></a>
+                    <div class="body"><h3><a href="@Url.Action("Details", "Rooms", new { id = 6 })">Presidential Suite</a></h3><p class="price">8.500.000 đ / đêm</p><p class="rating-line">@homeRatingLine(6)</p><p>Tối đa 4 khách. Bể bơi riêng, quản gia riêng, view biển 180 độ.</p>@if (roomAvail != null && roomAvail.ContainsKey(6))
+                    {
+                        if (roomAvail[6] > 0)
+                        {
+                            <p class="avail">Còn @roomAvail[6]/@roomTotal[6] phòng trống</p>
+                            if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('presidential')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 6 })">Xem chi tiết →</a>
+                        }
+                        else
+                        {
+                            <p class="soldout">Hết phòng</p>
+                        }
+                    }
+                    else
+                    {
+                        if (!isAdmin) { <button class="btn" type="button" onclick="selectRoom('presidential')">Chọn phòng</button> } <a href="@Url.Action("Details", "Rooms", new { id = 6 })">Xem chi tiết →</a>
+                    }</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DỊCH VỤ -->
+    <section id="dich-vu" style="background:#f9f7f3;padding-top:60px">
+        <div class="wrap">
+            <div class="center"><p class="kicker">Dịch vụ đi kèm</p><h2>Để kỳ nghỉ trọn vẹn hơn</h2></div>
+            <div class="grid grid4">
+                <div class="card svc"><div class="icon">🍳</div><h3>Buffet Sáng 4★</h3><p class="price">250.000 đ / đêm</p></div>
+                <div class="card svc"><div class="icon">🚗</div><h3>Đưa Đón Sân Bay</h3><p class="price">400.000 đ / chuyến</p></div>
+                <div class="card svc"><div class="icon">💆</div><h3>Spa &amp; Massage</h3><p class="price">600.000 đ / gói</p></div>
+                <div class="card svc"><div class="icon">👕</div><h3>Giặt Ủi Nhanh</h3><p class="price">150.000 đ / đêm</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CÂU CHUYỆN -->
+    <section class="dark-sec center">
+        <div class="wrap">
+            <p class="kicker">Câu chuyện Grand Horizon</p>
+            <h2>Chúng tôi tin rằng, dịch vụ tốt bắt đầu từ sự tận tâm</h2>
+            <p>Từ một khách sạn nhỏ bên bờ biển, Grand Horizon lớn lên cùng niềm tin: mỗi vị khách đều xứng đáng được đón tiếp như người thân trở về nhà.</p>
+        </div>
+    </section>
+    <!-- FORM ĐẶT PHÒNG -->
+    @if (!isAdmin)
+    {
+    <section id="dat-phong">
+        <div class="wrap">
+            <div class="center"><p class="kicker">Đặt phòng</p><h2>Đặt phòng của bạn</h2></div>
+            <form id="bookingForm" class="form-box" method="post" action="@Url.Action("Create", "Booking")">
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="field"><label>Họ tên *</label><input id="bkName" type="text" placeholder="Nguyễn Gia Bảo" name="name" value="@(Session["GuestName"])"></div>
+                    <div class="field"><label>Số điện thoại *</label><input id="bkPhone" type="tel" placeholder="0369436165" name="phone" value="@(Session["GuestPhone"])"></div>
+                </div>
+                <div class="field"><label>Email *</label><input id="bkEmail" type="email" placeholder="ban@email.com" name="email" value="@(Session["GuestEmail"])"></div>
+                <div class="row">
+                    <div class="field"><label>Nhận phòng</label><input id="bkIn" type="date" name="checkin"></div>
+                    <div class="field"><label>Trả phòng</label><input id="bkOut" type="date" name="checkout"></div>
+                </div>
+                <div class="field">
+                    <label>Loại phòng</label>
+                    <select id="bkRoom" name="roomType">
+                        <option value="standard">Standard — 1.200.000 đ/đêm</option>
+                        <option value="deluxe" selected>Deluxe — 2.200.000 đ/đêm</option>
+                        <option value="suite">Executive Suite — 4.500.000 đ/đêm</option>
+                        <option value="family">Family Suite — 3.800.000 đ/đêm</option>
+                        <option value="ocean">Ocean View Deluxe — 2.800.000 đ/đêm</option>
+                        <option value="presidential">Presidential Suite — 8.500.000 đ/đêm</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Dịch vụ thêm</label>
+                    <label class="check"><input type="checkbox" class="svc" name="services" value="1" data-price="250000" data-per="night"> Buffet Sáng — 250.000 đ/đêm</label>
+                    <label class="check"><input type="checkbox" class="svc" name="services" value="2" data-price="400000" data-per="once"> Đưa Đón Sân Bay — 400.000 đ/chuyến</label>
+                    <label class="check"><input type="checkbox" class="svc" name="services" value="3" data-price="600000" data-per="once"> Spa &amp; Massage — 600.000 đ/gói</label>
+                    <label class="check"><input type="checkbox" class="svc" name="services" value="4" data-price="150000" data-per="night"> Giặt Ủi Nhanh — 150.000 đ/đêm</label>
+                </div>
+                <p class="total">Tổng tiền: <b id="totalAmount">0 đ</b></p>
+                <p id="totalDetail" style="color:#666;font-size:14px"></p>
+                <p class="error" id="formAlert"></p>
+                <button class="btn" type="submit" style="width:100%">Xác nhận đặt phòng</button>
+            </form>
+
+            <div id="confirmation" class="form-box">
+                <h2>Đặt Phòng Thành Công!</h2>
+                <p id="confirmDetails" style="margin:16px 0"></p>
+                <button class="btn dark" id="bookAgain" type="button">Đặt phòng khác</button>
+            </div>
+        </div>
+    </section>
+    }
+
+    <footer>
+        @RenderBody()
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+    <script src="@Url.Content("~/Content/Script/Script.js")"></script>
+    @* Bản v6-v7: dropdown Quận/Huyện nạp theo tỉnh đã chọn (qua /Rooms/Districts). *@
+    <script>
+        (function () {
+            var prov = document.getElementById('provinceSelect');
+            var dist = document.getElementById('districtSelect');
+            if (!prov || !dist) return;
+            function loadDistricts() {
+                var p = prov.value;
+                dist.innerHTML = '<option value="">Tất cả quận / huyện</option>';
+                if (!p) { dist.disabled = true; return; }
+                dist.disabled = false;
+                fetch('@Url.Action("Districts", "Rooms")?province=' + encodeURIComponent(p))
+                    .then(function (r) { return r.json(); })
+                    .then(function (list) {
+                        list.forEach(function (d) {
+                            var o = document.createElement('option');
+                            o.value = d.name; o.textContent = d.name;
+                            dist.appendChild(o);
+                        });
+                    });
+            }
+            prov.addEventListener('change', loadDistricts);
+        })();
+    </script>
+</body>
+</html>

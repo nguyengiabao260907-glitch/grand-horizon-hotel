@@ -1,0 +1,163 @@
+﻿@using LapTrinhWeb_pro.Models
+@{
+    Layout = null;
+    ViewBag.Title = "Đặt phòng";
+    // Bản v5: admin chỉ quản lý phòng, không đặt phòng.
+    bool isAdmin = (Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn";
+    var roomTypes = ViewBag.RoomTypes as List<LapTrinhWeb_pro.Models.ROOM_TYPE>;
+    var services = ViewBag.Services as List<LapTrinhWeb_pro.Models.SERVICE>;
+    string selectedKey = ViewBag.SelectedKey as string ?? "deluxe";
+    int? preselectedService = ViewBag.PreselectedService as int?;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt phòng — Grand Horizon Hotel</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/css.css")" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="wrap">
+            <a class="logo" href="@Url.Action("Index", "Home")">GRAND <span>HORIZON</span></a>
+            <ul>
+                <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li><a href="@Url.Action("Index", "Rooms")">Phòng</a></li>
+                <li><a href="@Url.Action("Index", "Services")">Dịch vụ</a></li>
+                <li><a href="@Url.Action("Index", "Buffet")">Thực đơn Buffet</a></li>
+                <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                <li><a href="@Url.Action("Index", "Destinations")">Điểm đến</a></li>
+                @if (!isAdmin)
+                {
+                    <li><a href="@Url.Action("Create", "Booking")">Đặt phòng</a></li>
+                }
+                @if (Session["GuestName"] != null)
+                {
+                    if (!isAdmin)
+                    {
+                        <li><a href="@Url.Action("MyBookings", "Booking")">Đơn hàng của tôi</a></li>
+                    }
+                    if ((Session["GuestEmail"] as string ?? "").Trim().ToLower() == "admin@grandhorizon.vn")
+                    {
+                        <li><a href="@Url.Action("Index", "Admin")">Quản trị</a></li>
+                    }
+                    <li class="nav-hello">Xin chào, @Session["GuestName"]</li>
+                    <li><a href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a href="@Url.Action("Login", "Account")">Đăng nhập</a></li>
+                    <li><a href="@Url.Action("Register", "Account")">Đăng ký</a></li>
+                }
+            </ul>
+            <a class="btn" href="@Url.Action("Index", "Home")">Trang chủ</a>
+        </div>
+    </nav>
+
+    <section id="dat-phong">
+        <div class="wrap">
+            <div class="center">
+                <p class="kicker">Đặt phòng</p>
+                <h2>Đặt phòng của bạn</h2>
+                <p class="sub">Điền thông tin bên dưới, tổng tiền được tính ngay. Mã giảm giá <b>GRAND10</b> giảm 10% tổng tiền.</p>
+            </div>
+            <form id="bookingForm" class="form-box" method="post" action="@Url.Action("Create", "Booking")" data-redirect="confirmation">
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="field"><label>Họ tên *</label><input id="bkName" type="text" placeholder="Nguyễn Gia Bảo" name="name" value="@(Session["GuestName"])"></div>
+                    <div class="field"><label>Số điện thoại *</label><input id="bkPhone" type="tel" placeholder="0369436165" name="phone" value="@(Session["GuestPhone"])"></div>
+                </div>
+                <div class="field"><label>Email *</label><input id="bkEmail" type="email" placeholder="ban@email.com" name="email" value="@(Session["GuestEmail"])"></div>
+                <div class="row">
+                    <div class="field"><label>Nhận phòng</label><input id="bkIn" type="date" name="checkin" value="@(ViewBag.Checkin ?? "")"></div>
+                    <div class="field"><label>Trả phòng</label><input id="bkOut" type="date" name="checkout" value="@(ViewBag.Checkout ?? "")"></div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Loại phòng</label>
+                        <select id="bkRoom" name="roomType">
+                            @if (roomTypes == null || roomTypes.Count == 0)
+                            {
+                                <option value="">Không còn phòng trống trong khoảng ngày đã chọn</option>
+                            }
+                            @if (roomTypes != null)
+                            {
+                                foreach (var t in roomTypes)
+                                {
+                                    string key = RoomCatalog.KeyForName(t.name);
+                                    <option value="@key" @(key == selectedKey ? "selected" : "")>@t.name — @t.price_per_night.ToString("N0") đ/đêm</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Số khách</label>
+                        <select name="guests">
+                            <option>1 khách</option>
+                            <option selected>2 khách</option>
+                            <option>3 khách</option>
+                            <option>4 khách</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Dịch vụ thêm</label>
+                    @if (services != null)
+                    {
+                        foreach (var s in services)
+                        {
+                            var info = ServiceCatalog.ByDbId(s.service_id);
+                            decimal price = info != null ? info.Price : 0;
+                            string per = (info != null && info.PerNight) ? "night" : "once";
+                            string unit = info != null ? info.Unit : "";
+                            <label class="check"><input type="checkbox" class="svc" name="services" value="@s.service_id" data-price="@((int)price)" data-per="@per" @(preselectedService.HasValue && preselectedService.Value == s.service_id ? "checked" : "")> @s.service_name — @price.ToString("N0") đ/@unit</label>
+                        }
+                    }
+                </div>
+                <div class="row">
+                    <div class="field"><label>Mã giảm giá</label><input id="promoCode" type="text" name="promoCode" placeholder="VD: GRAND10"></div>
+                    <div class="field">
+                        <label>Phương thức thanh toán</label>
+                        <select name="paymentMethod">
+                            <option value="Thanh toán tại khách sạn" selected>Thanh toán tại khách sạn</option>
+                            <option value="Chuyển khoản">Chuyển khoản</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="total">Tổng tiền: <b id="totalAmount">0 đ</b></p>
+                <p id="totalDetail" style="color:#666;font-size:14px"></p>
+                <p class="error" id="formAlert"></p>
+                <button class="btn" type="submit" style="width:100%">Xác nhận đặt phòng</button>
+            </form>
+
+            <div id="confirmation" class="form-box" style="display:none">
+                <h2>Đặt Phòng Thành Công!</h2>
+                <p id="confirmDetails" style="margin:16px 0"></p>
+                <button class="btn dark" id="bookAgain" type="button">Đặt phòng khác</button>
+            </div>
+            <p class="auth-switch"><a href="@Url.Action("Index", "Home")">← Về trang chủ</a> · <a href="@Url.Action("Index", "Rooms")">Xem tất cả phòng →</a></p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="grid">
+                <div><h3>Grand Horizon</h3><p>Khách sạn &amp; Khu nghỉ dưỡng 4★</p></div>
+                <div><h3><a href="@Url.Action("Contact", "Home")">Liên hệ</a></h3><p>123 Đường Biển, Đà Nẵng</p><p>0369 436 165</p></div>
+                <div><h3>Khám phá</h3><a href="@Url.Action("Index", "Destinations")">Điểm đến</a><a href="@Url.Action("Index", "Rooms")">Phòng</a><a href="@Url.Action("Index", "Services")">Dịch vụ</a></div>
+                <div><h3>Giờ làm việc</h3><p>Lễ tân: 24/7</p><p>Nhà hàng: 6:00 – 22:00</p></div>
+            </div>
+            <p style="text-align:center;margin-top:30px">© 2026 - Grand Horizon Hotel</p>
+        </div>
+    </footer>
+    <script src="@Url.Content("~/Content/Script/Script.js")"></script>
+    <script>
+        // Trang Create dùng chung calculateTotal() trong Script.js;
+        // chỉ cần tính lại tổng mỗi khi đổi mã giảm giá.
+        var promoEl = document.getElementById('promoCode');
+        if (promoEl) promoEl.addEventListener('input', calculateTotal);
+    </script>
+</body>
+</html>
